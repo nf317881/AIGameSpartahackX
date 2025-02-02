@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tips</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            background: black;
+            padding: 70px;
+            border-radius: 40px;
+            box-shadow: 0 0 10px black(0, 0, 0, 1);
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+        h2 {
+            color: #ffffff;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+        }
+        p {
+            line-height: 1.6;
+            color: #f8f8f8;
+        }
+        ul {
+            padding-left: 20px;
+            color: #f8f8f8;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TIPS</h1>
+        
+        <h2>Neurons</h2>
+        <p>Neurons are a basic computational unit that mimic the functions of biological neurons, that processes inputs and produces an output. Each input is associated with a weight, which determines the importance of that input. The neuron sums up the weighted inputs, adds a bias, and then applies an activation function to produce the output.</p>
+        
+        <h2>Layer</h2>
+        <p>A collection of neurons that operate together at a specific depth in the network.</p>
+        
+        <h2>Input Layers</h2>
+        <p>The input layer is the first layer of a neural network. It receives the raw input data (e.g., images, text, numerical data) and passes it to the subsequent layers for processing. The input layer does not perform any computation; it simply defines the shape and size of the input data.</p>
+        
+        <h2>Convolutional Layers</h2>
+        <p>Convolutional Neural Networks are a class of deep learning models specifically designed for processing structured grid data, such as images, videos, and even audio spectrograms. CNNs are a type of artificial neural network that uses convolutional layers to automatically and adaptively learn spatial hierarchies of features from input data.</p>
+        
+        <h2>Flattening Layers</h2>
+        <p>Flattening layers are a crucial component in Convolutional Neural Networks (CNNs) and other deep learning models. They serve as a bridge between the convolutional/pooling layers and the fully connected layers.</p>
+        
+        <h2>Pooling Layers</h2>
+        <p>The pooling layer is a critical component of Convolutional Neural Networks (CNNs) that helps reduce the spatial dimensions of the feature maps produced by convolutional layers. Its primary purpose is to downsample the feature maps, making the network computationally more efficient, reducing the risk of overfitting, and introducing a degree of translation invariance.</p>
+        
+        <h2>Fully Connected Layers</h2>
+        <p>Fully Connected Layers are a fundamental component of neural networks. They play a critical role in combining features extracted by earlier layers to make predictions, such as classifying an image or predicting a value. This is where every neuron is connected to every neuron in the previous layer. It takes a flattened input and applies a linear transformation followed by a non-linear activation function.</p>
+        <h2>Output Layers</h2>
+        <p>The output layer is the final layer of a neural network. It produces the network’s predictions based on the processed input data. The structure and activation function of the output layer usually depends on the task being performed.</p>
+        
+        <h2>Activation Functions</h2>
+        <p>Introduce non-linearity and help the network learn complex patterns.</p>
+        <ul>
+            <li><strong>ReLU:</strong> ReLU is widely used because it is computationally efficient and helps mitigate the vanishing gradient problem. However, it can cause "dying ReLU" problems where some neurons become inactive.</li>
+            <li><strong>Leaky ReLU:</strong> Leaky Rectified Linear Unit (Leaky ReLU) is an activation function used in artificial neural networks to introduce non-linearity while addressing the "dying ReLU" problem.</li>
+            <li><strong>Softmax:</strong> Typically used in the output layer for multi-class classification problems. It converts the output into a probability distribution, where each value represents the probability of a particular class.</li>
+            <li><strong>ELU:</strong> Helps to reduce the vanishing gradient problem and can lead to faster convergence compared to ReLU.</li>
+            <li><strong>Sigmoid:</strong> The sigmoid function is a widely used activation function in neural networks, particularly in binary classification tasks. It maps any real-valued number to a value between 0 and 1, making it useful for producing probabilities.</li>
+        </ul>
+        
+        <h2>Batch Normalization</h2>
+        <p>Normalizes layer inputs to stabilize and accelerate training. Speeds up training and allows higher learning rates.</p>
+        
+        <h2>Dropout</h2>
+        <p>Regularization technique to prevent overfitting by randomly dropping neurons during training. Prevents over-reliance on specific neurons, improving generalization.</p>
+    </div>
+</body>
+</html>
