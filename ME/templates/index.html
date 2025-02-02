@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neural Network Trainer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.20.0/plotly.min.js"></script>
+  <style>
+    body { font-family: 'Arial', sans-serif; text-align: center; background: linear-gradient(120deg, #2c3e50, #4ca1af); color: white; }
+    .menu, .page { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; }
+    .menu button, .page button { margin: 10px; padding: 15px 30px; font-size: 20px; background: #f1c40f; color: black; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; }
+    .menu button:hover, .page button:hover { background: #d4ac0d; }
+    .hidden { display: none; }
+    .drag-container { width: 50%; padding: 20px; border: 2px dashed #ccc; min-height: 200px; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; margin: 20px; display: flex; flex-direction: column; align-items: center; }
+    .draggable { padding: 10px; margin: 5px; background-color: #3498db; cursor: grab; border-radius: 5px; text-align: center; color: white; font-weight: bold; display: inline-block; width: 160px; }
+    .game-layout { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .game-controls { display: flex; gap: 20px; }
+    #plot { margin-top: 30px; }
+    .config-input { margin-top: 5px; padding: 5px; width: 100px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="menu" class="menu">
+    <h1>Neural Network Trainer</h1>
+    <button onclick="showPage('game')">Start Game</button>
+    <button onclick="showPage('tutorial')">Tutorial</button>
+    <button onclick="showPage('settings')">Settings</button>
+    <button onclick="showPage('credits')">Credits</button>
+  </div>
+  
+  <div id="game" class="page hidden">
+    <h1>Build Your Neural Network</h1>
+    <div class="game-layout">
+      <div>
+        <h3>Drag Components</h3>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="linear">Linear</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="dropout">Dropout</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="batchnorm">Batch Normalization</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="conv">Convolutional</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="pool">Pool</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="flatten">Flatten</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="relu">ReLU Activation</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="leakyrelu">Leaky ReLU</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="elu">ELU</div>
+        <div class="draggable" draggable="true" ondragstart="drag(event)" id="sigmoid">Sigmoid Activation</div>
+      </div>
+      <div class="drag-container" id="network" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <h3>Network Configuration</h3>
+      </div>
+      <div class="game-controls">
+        <button onclick="trainModel()">Train Model</button>
+        <button onclick="clearNetwork()">Reset</button>
+        <button onclick="showPage('menu')">Back to Menu</button>
+      </div>
+    </div>
+    <div id="plot"></div>
+  </div>
+  
+  <script>
+    // Show/hide pages
+    function showPage(pageId) {
+      document.querySelectorAll('.menu, .page').forEach(div => div.classList.add('hidden'));
+      document.getElementById(pageId).classList.remove('hidden');
+    }
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+    function drop(ev) {
+      ev.preventDefault();
+      let data = ev.dataTransfer.getData("text");
+      let node = document.createElement("div");
+      node.classList.add("draggable");
+      node.style.width = "160px";
+      node.style.margin = "5px auto";
+      node.style.display = "block";
+      
+      // Add inputs if needed
+      if (data === "linear") {
+        node.innerHTML = 'Linear <input type="number" class="config-input" min="1" max="1000" placeholder="Neurons">';
+      } else if (data === "conv") {
+        node.innerHTML = 'Convolutional <input type="number" class="config-input" min="1" max="1000" placeholder="Out Channels"> <input type="number" class="config-input" min="2" max="10" placeholder="Kernel Size">';
+      } else if (data === "pool") {
+        node.innerHTML = 'Pool <input type="number" class="config-input" min="2" max="10" placeholder="Kernel Size">';
+      } else {
+        // For components that need no extra configuration
+        if(data === "batchnorm") {
+          node.textContent = "Batch Normalization";
+        } else if(data === "relu") {
+          node.textContent = "ReLU Activation";
+        } else if(data === "leakyrelu") {
+          node.textContent = "Leaky ReLU";
+        } else if(data === "elu") {
+          node.textContent = "ELU";
+        } else if(data === "dropout") {
+          node.textContent = "Dropout";
+        } else if(data === "flatten") {
+          node.textContent = "Flatten";
+        } else if(data === "sigmoid") {
+          node.textContent = "Sigmoid Activation";
+        } else {
+          node.textContent = data;
+        }
+      }
+      
+      document.getElementById("network").appendChild(node);
+    }
+    function clearNetwork() {
+      document.getElementById("network").innerHTML = "<h3>Network Configuration</h3>";
+    }
+    
+    // When the user clicks "Train Model"
+    function trainModel() {
+      let networkContainer = document.getElementById("network");
+      // Gather all components (skip the first child, which is the header)
+      let components = [];
+      for (let i = 1; i < networkContainer.children.length; i++) {
+        let node = networkContainer.children[i];
+        // Get the text content (the layer name)
+        let compText = node.textContent.split(" ")[0].trim();
+        // Get configuration inputs (if any)
+        let inputs = node.querySelectorAll("input");
+        let config = [];
+        inputs.forEach(input => {
+          config.push(input.value);
+        });
+        components.push({ type: node.textContent.split(" ")[0].trim(), config: config });
+      }
+      
+      if (components.length === 0) {
+        alert("Please add components to the network before training.");
+        return;
+      }
+      
+      // Send the configuration to the backend
+      fetch('/train', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ components: components })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) {
+          alert("Error: " + data.error);
+        } else {
+          // Plot the target function vs. the network's predictions
+          Plotly.newPlot("plot", [
+            { x: data.x, y: data.y_true, name: "Target Function", line: { color: 'blue' } },
+            { x: data.x, y: data.y_pred, name: "Predicted Function", line: { color: 'red', dash: 'dot' } }
+          ]);
+          // Optionally, display additional metrics:
+          console.log("Total Inaccuracy:", data.total_inaccuracy);
+          console.log("Std. Inaccuracy:", data.std_inaccuracy);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("An error occurred during training.");
+      });
+    }
+  </script>
+</body>
+</html>
