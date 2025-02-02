@@ -2,7 +2,6 @@ from copy import copy
 import math
 import tkinter as tk
 from tkinter import font
-import winsound
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
@@ -503,7 +502,7 @@ class GameLauncher:
         self.credits_frame.place(relx=0.5, rely=0.5, anchor="center")
         
         # Credits text
-        credits_text = "Made by Nathan Forman, Pranaov Giridharan, Akhil, Suva, and DeepSeek."
+        credits_text = "Made by Nathan Forman, Pranaov Giridharan, Akhil Peteti, Suva Sai Ruthwik Suravarapu, DeepSeek, and ChatGPT."
         credits_label = tk.Label(
             self.credits_frame,
             text=credits_text,
@@ -533,7 +532,6 @@ class GameLauncher:
         # Add hover effects to back button
         back_btn.bind("<Enter>", lambda e, b=back_btn: self.on_enter(b))
         back_btn.bind("<Leave>", lambda e, b=back_btn: self.on_leave(b))
-        back_btn.bind("<Button-1>", self.play_sound)
 
     def show_credits(self):
         self.main_frame.place_forget()
@@ -555,9 +553,6 @@ class GameLauncher:
             borderwidth=0
         )
         button.config(font=("Arial", 18, "bold"))
-
-    def play_sound(self, event):
-        winsound.Beep(440, 0)
 
     def show_tutorial(self): 
         self.main_frame.place_forget()
