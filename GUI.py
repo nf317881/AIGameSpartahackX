@@ -349,6 +349,7 @@ class GameLauncher:
         self.credits_frame = tk.Frame(root, bg="#1a1a1a")
         self.levels_frame = tk.Frame(root, bg="#1a1a1a")
         self.tutorial_frame = tk.Frame(root, bg="#1a1a1a")
+        self.resources_frame = tk.Frame(root, bg="#1a1a1a")
 
         self.level_frames = []
         for x in range(10):
@@ -359,6 +360,7 @@ class GameLauncher:
         self.create_levels_screen()
         self.create_tutorial_screen()
         self.create_each_level()
+        self.create_resources_screen()
 
         self.hide_all_frames()
         self.show_main_menu()
@@ -408,6 +410,7 @@ class GameLauncher:
         self.credits_frame.place_forget()
         self.levels_frame.place_forget()
         self.tutorial_frame.place_forget()
+        self.resources_frame.place_forget()
         for x in range(10):
             self.level_frames[x].place_forget()
 
@@ -417,7 +420,7 @@ class GameLauncher:
         for idx, (text, command) in enumerate([
                 ("Levels", self.show_levels),
                 ("Tutorial", self.show_tutorial),
-                ("Settings", self.open_settings),
+                ("Resources", self.show_resources),
                 ("Credits", self.show_credits)]):
             btn = tk.Button(self.main_frame, text=text, font=self.button_font, 
                             bg="#4d4d4d", fg="#ffffff", activebackground="#666666", 
@@ -561,7 +564,131 @@ class GameLauncher:
         self.tutorial_frame.place(relx=0.5, rely=0.5, anchor="center")
         
 
-    def open_settings(self): pass
+    def create_resources_screen(self):
+        self.resources_frame.place(relx=.5, rely=.5, anchor="center")
+    
+    # Create a canvas with a scrollbar
+        canvas = tk.Canvas(self.resources_frame, bg="#1a1a1a", highlightthickness=0, width=900, height=600)
+        scrollbar = tk.Scrollbar(self.resources_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg="#1a1a1a")
+        canvas.bind_all("<MouseWheel>", lambda e: self.on_mouse_wheel(e, canvas))
+        
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind(
+        "<Configure>",
+        lambda e: canvas.configure(
+        scrollregion=canvas.bbox("all")
+        )
+    )
+
+    # Add the scrollable frame to the canvas
+        canvas.create_window((0,0), window=scrollable_frame, anchor="nw")
+
+    # Pack the canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        resources_text = """
+        TIPS:
+
+
+Neurons: Neurons are a basic computational unit that mimic the functions of  biological neurons, that processes inputs and produces an output. Each input is associated with a weight, which determines the importance of that input. The neuron sums up the weighted inputs, adds a bias, and then applies an activation function to produce the output.
+Layer: A collection of neurons that operate together at a specific depth in the network.
+Input layers: 
+The input layer is the first layer of a neural network. It receives the raw input data (e.g., images, text, numerical data) and passes it to the subsequent layers for processing. The input layer does not perform any computation; it simply defines the shape and size of the input data.
+Convolutional layers: 
+Convolutional Neural Networks are a class of deep learning models specifically designed for processing structured grid data, such as images, videos, and even audio spectrograms. CNNs are a type of artificial neural network that uses convolutional layers to automatically and adaptively learn spatial hierarchies of features from input data. 
+
+Flattening layers:
+Flattening layers are a crucial component in Convolutional Neural Networks (CNNs) and other deep learning models. They serve as a bridge between the convolutional/pooling layers and the fully connected layers. 
+
+Pooling layers:
+The pooling layer is a critical component of Convolutional Neural Networks (CNNs) that helps reduce the spatial dimensions of the feature maps produced by convolutional layers. Its primary purpose is to downsample the feature maps, making the network computationally more efficient, reducing the risk of overfitting, and introducing a degree of translation invariance.
+
+Fully connected layers:
+Fully Connected Layers  are a fundamental component of neural networks. They play a critical role in combining features extracted by earlier layers to make predictions, such as classifying an image or predicting a value. This is where every neuron is connected to every neuron in the previous layer. It takes a flattened input and applies a linear transformation followed by a non-linear activation function.
+
+
+
+Activation Functions: Introduce non-linearity and help the network learn complex patterns 
+ReLU - ReLU is widely used because it is computationally efficient and helps mitigate the vanishing gradient problem. However, it can cause "dying ReLU" problems where some neurons become inactive.
+
+Leaky ReLU- Leaky Rectified Linear Unit (Leaky ReLU) is an activation function used in artificial neural networks to introduce non-linearity while addressing the "dying ReLU" problem.
+
+Softmax - typically used in the output layer for multi-class classification problems. It converts the output into a probability distribution, where each value represents the probability of a particular class.
+
+ELU - helps to reduce the vanishing gradient problem and can lead to faster convergence compared to ReLU.
+
+Sigmoid - The sigmoid function is a widely used activation function in neural networks, particularly in binary classification tasks. It maps any real-valued number to a value between 0 and 1, making it useful for producing probabilities.
+
+
+Batch Normalization: Batch Normalization is a technique used to improve the training of neural networks by normalizing the inputs of each layer. It was introduced in a 2015 paper by Sergey Ioffe and Christian Szegedy and has since become a standard component in many deep learning models. Batch Normalization helps stabilize and accelerate training, allowing for higher learning rates and reducing the need for careful initialization of weights.Batch Normalization normalizes the outputs of a layer (or the inputs to the next layer) by adjusting and scaling the activations. Specifically, it normalizes the mean and variance of the activations for each mini-batch during training.
+
+
+Dropout: Regularization technique to prevent overfitting by randomly dropping neurons during training. Prevents over-reliance on specific neurons, improving generalization.
+
+
+
+
+
+
+
+
+Training a neural network:   
+
+Forward propagation: 
+Forward propagation is the process of passing input data through the network to compute predictions.  Each neuron in a layer receives inputs from the previous layer, applies a weighted sum, and passes the result through an activation function.
+
+Loss functions:
+The loss function measures how well the model’s predictions match the true labels. The goal of training is to minimize this loss by comparing the model’s predicted values to the actual values.
+
+Mean Squared Error (MSE) Loss is a commonly used loss function in neural networks, particularly for regression tasks. It measures the average squared difference between the predicted values and the true values. The goal of training a neural network is to minimize this loss, which improves the model’s accuracy. This is the loss function used in NexusGrid.
+
+Back propagation:
+Backpropagation is the process of computing gradients of the loss function with respect to the model’s weights. These gradients are used to update the weights during training.
+
+Weight updates:
+The weights are updated iteratively using optimization algorithms such as the one described above.
+
+Optimizations:
+Optimization techniques are algorithms or methods used to adjust the parameters of a model to minimize a loss function. The goal is to find the optimal set of parameters that results in the best performance of the model.
+
+The Adam optimizer (Adaptive Moment Estimation) is one of the most popular optimization algorithms used in training neural networks, and it's used in NexusGrid. It combines the benefits of two other optimization techniques: Momentum and RMSprop. Adam is known for its efficiency and ability to handle sparse gradients, making it a first choice for many deep learning models.
+"""
+# Add the text to the scrollable frame
+        resources_label = tk.Label(
+        scrollable_frame,
+        text=resources_text,
+        font=("Arial", 12),
+        bg="#1a1a1a",
+        fg="#ffffff",
+        justify="left",
+        wraplength=800
+    )
+        resources_label.pack(pady=20, padx=20, anchor="w")
+    
+    # Back button
+        back_btn = tk.Button(
+        scrollable_frame,
+        text="Back to Main",
+        font=self.button_font,
+        bg=self.colors["button_bg"],
+        fg=self.colors["text"],
+        activebackground=self.colors["button_active"],
+        activeforeground=self.colors["text"],
+        relief="flat",
+        borderwidth=0,
+        width=15,
+        command=self.show_main_menu
+    )
+        back_btn.pack(pady=20, ipadx=10, ipady=8)
+    
+    # Add hover effects to back button
+        back_btn.bind("<Enter>", lambda e, b=back_btn: self.on_enter(b))
+        back_btn.bind("<Leave>", lambda e, b=back_btn: self.on_leave(b))
+    def show_resources(self):
+        self.hide_all_frames()
+        self.resources_frame.place(relx=0.5, rely=0.5, anchor="center")
 
 if __name__ == "__main__":
     root = tk.Tk()
