@@ -234,7 +234,7 @@ def get_custom_mnist(
     X_train = X_train.float().div(255).unsqueeze(1)  # Shape: [N, 1, 28, 28]
     X_test = X_test.float().div(255).unsqueeze(1)
 
-    return (X_train, y_train), (X_test, y_test)
+    return X_train, y_train, X_test, y_test
 
 def train_classification_model_time_based(
     model,

@@ -1,3 +1,4 @@
+from copy import copy
 import math
 import tkinter as tk
 from tkinter import font
@@ -32,10 +33,43 @@ class Level:
         
         # Create layout sections
         self.create_graph_section()
-        # Remove network builder...
         self.create_toolbox()
         self.create_palette()
         self.create_control_buttons()
+
+    def display_digits(self, digits_to_display):
+                """
+                Clears the current graph canvas and displays the specified digits in a grid.
+                :param digits_to_display: List of digits (e.g. [0, 1, 2, 3]) to display. 
+                                        If empty, the canvas will be cleared.
+                """
+                # Get the parent widget of the current graph canvas
+                graph_parent = self.canvas.get_tk_widget().master
+                # Destroy the existing canvas widget to clear the old graph
+                self.canvas.get_tk_widget().destroy()
+
+                count = len(digits_to_display)
+                if count == 0:
+                    # If no digits are provided, simply create an empty figure with the desired background.
+                    fig = plt.figure(facecolor="#2c3e50")
+                else:
+                    # Determine grid dimensions (fixed columns, rows computed from count)
+                    columns = 5
+                    rows = math.ceil(count / columns)
+                    fig, axes = plt.subplots(int(rows), int(columns), figsize=(4, 4), facecolor="#2c3e50")
+                    # Ensure axes is a flat array even if there's only one row
+                    axes = np.array(axes).flatten()
+                    for i, ax in enumerate(axes):
+                        if i < count:
+                            # Display the digit in the center of the subplot
+                            ax.text(0.5, 0.5, str(digits_to_display[i]), fontsize=32, ha="center", va="center", color="white")
+                        # Turn off the axis for a cleaner look
+                        ax.axis("off")
+                        ax.set_facecolor("#2c3e50")
+                # Create a new canvas for the updated figure and attach it to the same parent widget
+                self.canvas = FigureCanvasTkAgg(fig, master=graph_parent)
+                self.canvas.draw()
+                self.canvas.get_tk_widget().pack(fill="both", expand=True)
 
     def create_graph_section(self):
         graph_frame = tk.Frame(self.frame, bg="#2c3e50", width=400, height=400)
@@ -48,6 +82,14 @@ class Level:
         self.canvas = FigureCanvasTkAgg(fig, master=graph_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill="both", expand=True)
+
+        if self.classification:
+            digits_to_display = []
+            for x in range(len(self.MNIST_images)):
+                if self.MNIST_images[x]:
+                    digits_to_display.append(x)
+
+            self.display_digits(digits_to_display)
 
     def create_toolbox(self):
         # Toolbox with the requested components
@@ -68,12 +110,13 @@ class Level:
 
     def create_palette(self):
         # Palette takes up a fixed area (adjust as desired)
-        self.palette_frame = tk.Frame(self.frame, bg="#34495e", width=400, height=400)
+        self.palette_frame = tk.Frame(self.frame, bg="#34495e", width=400, height=600)
         self.palette_frame.grid(row=0, column=1, padx=10, pady=10, sticky="nsew")
         self.palette_frame.grid_propagate(False)  # Fix size
         self.palette_frame.columnconfigure(0, weight=1)
         tk.Label(self.palette_frame, text="Palette", bg="#34495e", fg="white",
                  font=("Arial", 12)).grid(row=0, column=0, pady=5)
+
 
     def create_control_buttons(self):
         btn_frame = tk.Frame(self.frame, bg="#1a1a1a")
@@ -141,7 +184,7 @@ class Level:
 
                 layer_list = [comp]
                 try: 
-                    if type(params) == list:
+                    if type(params) != int:
                         for x in params:
                             layer_list.append(x)
                     else:
@@ -203,10 +246,19 @@ class Level:
         # Replace the following line with your actual training logic.
         print(f"Training model for {train_time} seconds...")
 
+        MNIST_copy = copy(self.MNIST_images)
+
         if not self.classification:
             x_train, x_test, y_train, y_test = funcLibrary.generate_data(self.func)
         else:
-            x_train, x_test, y_train, y_test = funcLibrary.get_custom_mnist(self.MNIST_images)
+            for x in self.MNIST_images:
+                if x == 10:
+                    MNIST_copy[MNIST_copy.index(x)] = (8, 2)
+                else:
+                    MNIST_copy[MNIST_copy.index(x)] = (0, 0)
+
+            x_train, y_train, x_test, y_test = funcLibrary.get_custom_mnist(MNIST_copy[0], MNIST_copy[1], MNIST_copy[2],
+                    MNIST_copy[3], MNIST_copy[4], MNIST_copy[5], MNIST_copy[6], MNIST_copy[7], MNIST_copy[8], MNIST_copy[9])
 
 
         if self.classification:
@@ -268,10 +320,12 @@ class Level:
 
 
     def reset_network(self):
+        global model_list
         # Reset the palette: destroy all children except the header (assumed at row 0)
         for widget in self.palette_frame.grid_slaves():
             if int(widget.grid_info()["row"]) != 0:
                 widget.destroy()
+        model_list = []
 
 current_level = 0
 
@@ -332,11 +386,11 @@ class GameLauncher:
 
     def create_each_level(self):
         self.levels = []
-        self.levels.append(Level(self.level_frames[9], self.show_levels, 3E8, False, self.next_level, func = lambda x: abs(x))) #10
-        self.levels.append(Level(self.level_frames[8], self.show_levels, 3E8, False, self.next_level, func = lambda x: abs(x))) #9
-        self.levels.append(Level(self.level_frames[7], self.show_levels, 3E8, False, self.next_level, func = lambda x: abs(x))) #8
-        self.levels.append(Level(self.level_frames[6], self.show_levels, 3E8, False, self.next_level, func = lambda x: abs(x))) #7
-        self.levels.append(Level(self.level_frames[5], self.show_levels, 3E8, False, self.next_level, func = lambda x: abs(x))) #6
+        self.levels.append(Level(self.level_frames[9], self.show_levels, 3E8, True, self.next_level, func = lambda x: abs(x), MNIST_images=[10, 10, 10, 10, 10, 10, 10, 10, 10, 10])) #10
+        self.levels.append(Level(self.level_frames[8], self.show_levels, 3E8, True, self.next_level, func = lambda x: abs(x), MNIST_images=[10, 0, 0, 10, 0, 10, 0, 0, 10 ,0])) #9
+        self.levels.append(Level(self.level_frames[7], self.show_levels, 3E8, True, self.next_level, func = lambda x: abs(x), MNIST_images=[0, 0, 0, 10, 0, 0, 0, 0, 10 ,0])) #8
+        self.levels.append(Level(self.level_frames[6], self.show_levels, 3E8, True, self.next_level, func = lambda x: abs(x), MNIST_images=[10, 10, 10, 0, 0, 0, 0, 0, 0 ,0])) #7
+        self.levels.append(Level(self.level_frames[5], self.show_levels, 3E8, True, self.next_level, func = lambda x: abs(x), MNIST_images=[10, 10, 0, 0, 0, 0, 0, 0, 0 ,0])) #6
         self.levels.append(Level(self.level_frames[4], self.show_levels, 3E8, False, self.next_level, func = lambda x: np.sin(x))) #5
         self.levels.append(Level(self.level_frames[3], self.show_levels, 3E8, False, self.next_level, func = lambda x: x**2)) #4
         self.levels.append(Level(self.level_frames[2], self.show_levels, 3E8, False, self.next_level, func = lambda x: np.log(x+6))) #3
