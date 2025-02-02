@@ -235,6 +235,7 @@ class Level:
                                          "Enter training time (in seconds):",
                                          parent=self.master,
                                          minvalue=1)
+        
         self.train_time = train_time
         if train_time is None:
             # User cancelled, so return without training.
@@ -253,7 +254,7 @@ class Level:
         else:
             for x in self.MNIST_images:
                 if x == 10:
-                    MNIST_copy[MNIST_copy.index(x)] = (8, 2)
+                    MNIST_copy[MNIST_copy.index(x)] = (8, 2) #apple
                 else:
                     MNIST_copy[MNIST_copy.index(x)] = (0, 0)
 
