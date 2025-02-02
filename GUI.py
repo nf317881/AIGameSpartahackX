@@ -7,11 +7,16 @@ import numpy as np
 import tkinter.simpledialog as simpledialog  # Import simpledialog for user input
 import funcLibrary
 
-class TutorialLevel:
-    def __init__(self, master, back_callback):
+model_list = []
+classification = False
+
+class Level:
+    def __init__(self, master, back_callback, func):
         self.master = master
         self.back_callback = back_callback
         self.dragging = None
+
+        self.func = func
         
         # Configure main frame
         self.frame = tk.Frame(master, bg="#1a1a1a")
@@ -33,7 +38,7 @@ class TutorialLevel:
         graph_frame.grid(row=0, column=0, rowspan=1, padx=10, pady=10, sticky="nsew")
         fig, ax = plt.subplots(figsize=(4, 4), facecolor="#2c3e50")
         x = np.linspace(-5, 5, 100)
-        ax.plot(x, np.sin(x), color="#3498db")
+        ax.plot(x, self.func(x), color="#3498db")
         ax.set_facecolor("#2c3e50")
         ax.tick_params(colors="white")
         self.canvas = FigureCanvasTkAgg(fig, master=graph_frame)
@@ -96,6 +101,9 @@ class TutorialLevel:
             self.dragging["y"] = event.y_root
 
     def stop_drag(self, event):
+        global model_list
+        global classification
+
         if self.dragging:
             palette_x = self.palette_frame.winfo_rootx()
             palette_y = self.palette_frame.winfo_rooty()
@@ -120,14 +128,27 @@ class TutorialLevel:
                         display_text = f"{comp}\n(neurons: {params})"
                     elif comp == "Pooling":
                         display_text = f"{comp}\n(kernel: {params})"
+                        classification = True
                     elif comp == "Convolutional":
                         display_text = f"{comp}\n(channels: {params[0]}, kernel: {params[1]})"
+                        classification = True
                 else:
                     display_text = comp
-
                 new_label = tk.Label(self.palette_frame, text=display_text, bg="#3498db", fg="white",
                                      font=("Arial", 10), padx=10, pady=5, anchor="center")
                 new_label.grid(row=row, column=0, pady=5, padx=5, sticky="ew")
+
+                layer_list = [comp]
+                try: 
+                    if type(params) == list:
+                        for x in params:
+                            layer_list.append(x)
+                    else:
+                        layer_list.append(params)
+                except:
+                    pass
+                model_list.append(layer_list)
+
             self.dragging["widget"].destroy()
             self.dragging = None
 
@@ -158,25 +179,88 @@ class TutorialLevel:
 
     def train_model(self):
         # Build a list of layers from the palette.
-        # Assume the header is in row 0 and actual components are in rows > 0.
-        layer_items = []
-        for widget in self.palette_frame.grid_slaves():
-            # grid_slaves() may return widgets in reverse order;
-            info = widget.grid_info()
-            if int(info["row"]) == 0:
-                continue  # Skip header
-            if hasattr(widget, "model_data"):
-                layer_items.append((int(info["row"]), widget.model_data))
-        # Sort layers in order of increasing row number
-        layer_items.sort(key=lambda x: x[0])
-        # Extract only the model_data part into a list
-        input_list = [layer for _, layer in layer_items]
+        global model_list
+        global classification
 
         # Create the neural network model using your makemodel() function.
         # (Make sure to import makemodel from its module at the top of your file.)
-        model = funcLibrary.makemodel(input_list)
+        model = funcLibrary.makemodel(model_list)
         print("Neural network created:")
         print(model)
+
+        train_time = simpledialog.askinteger("Train Model",
+                                         "Enter training time (in seconds):",
+                                         parent=self.master,
+                                         minvalue=1)
+        self.train_time = train_time
+        if train_time is None:
+            # User cancelled, so return without training.
+            self.inaccuracy = 1
+            self.total_error = 3E8
+            self.std_error = 3E8
+            return 
+        # For demonstration, we simply print the time.
+        # Replace the following line with your actual training logic.
+        print(f"Training model for {train_time} seconds...")
+
+        x_train, x_test, y_train, y_test = funcLibrary.generate_data(self.func)
+        if classification:
+            self.inaccuracy = funcLibrary.train_classification_model_time_based(model, x_train, y_train, x_test, y_test, time_limit=train_time)
+        else:
+            self.total_error, self.std_error = funcLibrary.train_and_test_model_time_based(model, x_train, y_train, x_test, y_test, time_limit=train_time)
+        self.calculate_score()
+
+    def calculate_score(self):
+        # Create score popup window
+        self.score_window = tk.Toplevel(self.master)
+        self.score_window.title("Level Results")
+        self.score_window.geometry("400x300")
+        self.score_window.configure(bg="#1a1a1a")
+        self.score_window.grab_set()  # Make it modal
+
+        # Create rounded rectangle background
+        canvas = tk.Canvas(self.score_window, bg="#1a1a1a", highlightthickness=0)
+        canvas.pack(fill="both", expand=True)
+
+        # Determine star ratings based on performance
+        if classification:
+            score = 10
+            stars = 3 if score < 25 else 2 if score < 50 else 1
+        else:
+            score = 10
+            stars = 3 if score < 0.5 else 2 if score < 1.5 else 1
+
+        # Create stars
+        star_frame = tk.Frame(canvas, bg="#2c3e50")
+        star_frame.place(relx=0.5, rely=0.3, anchor="center")
+        
+        for i in range(3):
+            color = "#f1c40f" if i < stars else "#7f8c8d"
+            tk.Label(star_frame, text="★", font=("Arial", 32), 
+                    fg=color, bg="#2c3e50").pack(side="left", padx=5)
+
+        # Score display
+        score_text = f"Error: {score:.2f}" if not classification else f"Inaccuracy: {score:.1f}%"
+        tk.Label(canvas, text=score_text, font=("Arial", 16), 
+                fg="white", bg="#2c3e50").place(relx=0.5, rely=0.5, anchor="center")
+
+        # Buttons
+        btn_frame = tk.Frame(canvas, bg="#2c3e50")
+        btn_frame.place(relx=0.5, rely=0.8, anchor="center")
+        
+        tk.Button(btn_frame, text="Retry", bg="#e74c3c", fg="white",
+                command=lambda: [self.reset_network(), self.score_window.destroy()]).pack(side="left", padx=10)
+        
+        # Only show next level button if stars > 1
+        if stars > 1:
+            tk.Button(btn_frame, text="Next Level", bg="#27ae60", fg="white",
+                    command=self.next_level).pack(side="left", padx=10)
+
+    def next_level(self):
+        self.score_window.destroy()
+        # Add your logic for loading next level here
+        print("Proceeding to next level...")
+
 
     def reset_network(self):
         # Reset the palette: destroy all children except the header (assumed at row 0)
@@ -216,7 +300,7 @@ class GameLauncher:
         self.tutorial_frame.place(relx=0.5, rely=0.5, anchor="center")
 
     def create_tutorial_screen(self):
-        self.tutorial = TutorialLevel(self.tutorial_frame, self.show_main_menu)
+        self.tutorial = Level(self.tutorial_frame, self.show_main_menu, lambda x: x)
 
     def hide_all_frames(self):
         self.main_frame.place_forget()
@@ -312,7 +396,7 @@ class GameLauncher:
         self.credits_frame.place(relx=0.5, rely=0.5, anchor="center")
         
         # Credits text
-        credits_text = "Made by Nathan Forman, Pranaov Giridharan, and DeepSeek."
+        credits_text = "Made by Nathan Forman, Pranaov Giridharan, Akhil, Suva, and DeepSeek."
         credits_label = tk.Label(
             self.credits_frame,
             text=credits_text,

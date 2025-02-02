@@ -28,7 +28,7 @@ def makemodel(input_list):
         elif x[0] == "ReLU":
 
             input_copy[input_copy.index(x)] = nn.ReLU()
-        elif x[0] == "LeakyReLU":
+        elif x[0] == "Leaky ReLU":
 
             input_copy[input_copy.index(x)] = nn.LeakyReLU()
         elif x[0] == "ELU":
@@ -37,11 +37,11 @@ def makemodel(input_list):
         elif x[0] == "Sigmoid":
 
             input_copy[input_copy.index(x)] = nn.Sigmoid()
-        elif x[0] == "BatchNorm":
+        elif x[0] == "Batch Normalization":
             input_copy[input_copy.index(x)] = nn.BatchNorm1d()
-        elif x[0] == "Conv":
+        elif x[0] == "Convolutional":
             input_copy[input_copy.index(x)] = nn.LazyConv2d(x[1], x[2])
-        elif x[0] == "Pool":
+        elif x[0] == "Pooling":
             input_copy[input_copy.index(x)] = nn.MaxPool2d(x[1])
         elif x[0] == "Flatten":
             input_copy[input_copy.index(x)] = nn.Flatten()
@@ -324,7 +324,3 @@ def train_classification_model_time_based(
     inaccuracy_percent = (1 - accuracy) * 100
 
     return inaccuracy_percent
-
-model = [["Conv", 1, 8, 3], ["ReLU"], ["Pool", 2], ["Conv", 8, 16, 3], ["ReLU"], ["Pool", 2], ["Flatten"], 
-         ["Linear", 50], ["ReLU"], ["Linear", 10]]
-model = makemodel(model)
