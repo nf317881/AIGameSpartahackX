@@ -11,9 +11,10 @@ import funcLibrary
 model_list = []
 
 class Level:
-    def __init__(self, master, back_callback, score, classification, func = None, MNIST_images = None):
+    def __init__(self, master, back_callback, score, classification, next_level, func = None, MNIST_images = None):
         self.master = master
         self.back_callback = back_callback
+        self.next_level = next_level
         self.dragging = None
 
         self.classification = classification
@@ -300,9 +301,12 @@ class GameLauncher:
         self.create_credits_screen()
         self.create_levels_screen()
         self.create_tutorial_screen()
-        
-        self.show_main_menu()
         self.create_each_level()
+
+        self.hide_all_frames()
+        self.show_main_menu()
+        
+
         
     def show_tutorial(self):
         self.hide_all_frames()
@@ -310,19 +314,19 @@ class GameLauncher:
 
     def create_each_level(self):
         self.levels = []
-        self.levels.append(Level(self.level_frames[0], self.show_levels, 3E8, False, func = lambda x: abs(x))) #1
-        self.levels.append(Level(self.level_frames[1], self.show_levels, 3E8, False, func = lambda x: math.sqrt(x))) #2
-        self.levels.append(Level(self.level_frames[2], self.show_levels, 3E8, False, func = lambda x: math.log(x+6))) #3
-        self.levels.append(Level(self.level_frames[3], self.show_levels, 3E8, False, func = lambda x: x**2)) #4
-        self.levels.append(Level(self.level_frames[4], self.show_levels, 3E8, False, func = lambda x: math.sin(x))) #5
-        self.levels.append(Level(self.level_frames[5], self.show_levels, 3E8, False, func = lambda x: abs(x))) #6
-        self.levels.append(Level(self.level_frames[6], self.show_levels, 3E8, False, func = lambda x: abs(x))) #7
-        self.levels.append(Level(self.level_frames[7], self.show_levels, 3E8, False, func = lambda x: abs(x))) #8
-        self.levels.append(Level(self.level_frames[8], self.show_levels, 3E8, False, func = lambda x: abs(x))) #9
-        self.levels.append(Level(self.level_frames[9], self.show_levels, 3E8, False, func = lambda x: abs(x))) #10
+        self.levels.append(Level(self.level_frames[0], self.show_levels, 3E8, False, self.start_level(2), func = lambda x: abs(x))) #1
+        self.levels.append(Level(self.level_frames[1], self.show_levels, 3E8, False, self.start_level(3), func = lambda x: np.sqrt(x+5.1))) #2
+        self.levels.append(Level(self.level_frames[2], self.show_levels, 3E8, False, self.start_level(4), func = lambda x: np.log(x+6))) #3
+        self.levels.append(Level(self.level_frames[3], self.show_levels, 3E8, False, self.start_level(5), func = lambda x: x**2)) #4
+        self.levels.append(Level(self.level_frames[4], self.show_levels, 3E8, False, self.start_level(6), func = lambda x: np.sin(x))) #5
+        self.levels.append(Level(self.level_frames[5], self.show_levels, 3E8, False, self.start_level(7), func = lambda x: abs(x))) #6
+        self.levels.append(Level(self.level_frames[6], self.show_levels, 3E8, False, self.start_level(8), func = lambda x: abs(x))) #7
+        self.levels.append(Level(self.level_frames[7], self.show_levels, 3E8, False, self.start_level(9), func = lambda x: abs(x))) #8
+        self.levels.append(Level(self.level_frames[8], self.show_levels, 3E8, False, self.start_level(10), func = lambda x: abs(x))) #9
+        self.levels.append(Level(self.level_frames[9], self.show_levels, 3E8, False, self.show_levels, func = lambda x: abs(x))) #10
 
     def create_tutorial_screen(self):
-        self.tutorial = Level(self.tutorial_frame, self.show_main_menu, 3E8, False, func = lambda x: x)
+        self.tutorial = Level(self.tutorial_frame, self.show_main_menu, 3E8, False, self.show_main_menu, func = lambda x: x)
 
     def hide_all_frames(self):
         self.main_frame.place_forget()
@@ -415,8 +419,7 @@ class GameLauncher:
         self.level_frames[num-1].place(relx=0.5, rely=0.5, anchor="center")
 
     def show_levels(self):
-        self.main_frame.place_forget()
-        self.credits_frame.place_forget()
+        self.hide_all_frames()
         self.levels_frame.place(relx=0.5, rely=0.5, anchor="center")
 
     def create_credits_screen(self):
