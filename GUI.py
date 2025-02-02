@@ -1,3 +1,4 @@
+import math
 import tkinter as tk
 from tkinter import font
 import winsound
@@ -8,15 +9,17 @@ import tkinter.simpledialog as simpledialog  # Import simpledialog for user inpu
 import funcLibrary
 
 model_list = []
-classification = False
 
 class Level:
-    def __init__(self, master, back_callback, func):
+    def __init__(self, master, back_callback, score, classification, func = None, MNIST_images = None):
         self.master = master
         self.back_callback = back_callback
         self.dragging = None
 
+        self.classification = classification
         self.func = func
+        self.MNIST_images = MNIST_images
+        self.score = score
         
         # Configure main frame
         self.frame = tk.Frame(master, bg="#1a1a1a")
@@ -102,7 +105,6 @@ class Level:
 
     def stop_drag(self, event):
         global model_list
-        global classification
 
         if self.dragging:
             palette_x = self.palette_frame.winfo_rootx()
@@ -128,10 +130,8 @@ class Level:
                         display_text = f"{comp}\n(neurons: {params})"
                     elif comp == "Pooling":
                         display_text = f"{comp}\n(kernel: {params})"
-                        classification = True
                     elif comp == "Convolutional":
                         display_text = f"{comp}\n(channels: {params[0]}, kernel: {params[1]})"
-                        classification = True
                 else:
                     display_text = comp
                 new_label = tk.Label(self.palette_frame, text=display_text, bg="#3498db", fg="white",
@@ -180,7 +180,6 @@ class Level:
     def train_model(self):
         # Build a list of layers from the palette.
         global model_list
-        global classification
 
         # Create the neural network model using your makemodel() function.
         # (Make sure to import makemodel from its module at the top of your file.)
@@ -195,7 +194,7 @@ class Level:
         self.train_time = train_time
         if train_time is None:
             # User cancelled, so return without training.
-            self.inaccuracy = 1
+            self.inaccuracy = 3E8
             self.total_error = 3E8
             self.std_error = 3E8
             return 
@@ -203,8 +202,13 @@ class Level:
         # Replace the following line with your actual training logic.
         print(f"Training model for {train_time} seconds...")
 
-        x_train, x_test, y_train, y_test = funcLibrary.generate_data(self.func)
-        if classification:
+        if not self.classification:
+            x_train, x_test, y_train, y_test = funcLibrary.generate_data(self.func)
+        else:
+            x_train, x_test, y_train, y_test = funcLibrary.get_custom_mnist(self.MNIST_images)
+
+
+        if self.classification:
             self.inaccuracy = funcLibrary.train_classification_model_time_based(model, x_train, y_train, x_test, y_test, time_limit=train_time)
         else:
             self.total_error, self.std_error = funcLibrary.train_and_test_model_time_based(model, x_train, y_train, x_test, y_test, time_limit=train_time)
@@ -223,12 +227,12 @@ class Level:
         canvas.pack(fill="both", expand=True)
 
         # Determine star ratings based on performance
-        if classification:
-            score = 10
-            stars = 3 if score < 25 else 2 if score < 50 else 1
+        if self.classification:
+            score = self.inaccuracy*(self.train_time+1)
+            stars = 3 if score < self.score else self.score*1.25 if score < 50 else self.score*1.5
         else:
-            score = 10
-            stars = 3 if score < 0.5 else 2 if score < 1.5 else 1
+            score = self.total_error*(self.train_time+1)
+            stars = 3 if score < self.score else self.score*1.25 if score < 50 else self.score*1.5
 
         # Create stars
         star_frame = tk.Frame(canvas, bg="#2c3e50")
@@ -240,7 +244,7 @@ class Level:
                     fg=color, bg="#2c3e50").pack(side="left", padx=5)
 
         # Score display
-        score_text = f"Error: {score:.2f}" if not classification else f"Inaccuracy: {score:.1f}%"
+        score_text = f"Error: {score:.2f}" if not self.classification else f"Inaccuracy: {score:.1f}%"
         tk.Label(canvas, text=score_text, font=("Arial", 16), 
                 fg="white", bg="#2c3e50").place(relx=0.5, rely=0.5, anchor="center")
 
@@ -287,6 +291,10 @@ class GameLauncher:
         self.credits_frame = tk.Frame(root, bg="#1a1a1a")
         self.levels_frame = tk.Frame(root, bg="#1a1a1a")
         self.tutorial_frame = tk.Frame(root, bg="#1a1a1a")
+
+        self.level_frames = []
+        for x in range(10):
+            self.level_frames.append(tk.Frame(root, bg="#1a1a1a"))
         
         self.create_main_menu()
         self.create_credits_screen()
@@ -294,19 +302,35 @@ class GameLauncher:
         self.create_tutorial_screen()
         
         self.show_main_menu()
+        self.create_each_level()
         
     def show_tutorial(self):
         self.hide_all_frames()
         self.tutorial_frame.place(relx=0.5, rely=0.5, anchor="center")
 
+    def create_each_level(self):
+        self.levels = []
+        self.levels.append(Level(self.level_frames[0], self.show_levels, 3E8, False, func = lambda x: abs(x))) #1
+        self.levels.append(Level(self.level_frames[1], self.show_levels, 3E8, False, func = lambda x: math.sqrt(x))) #2
+        self.levels.append(Level(self.level_frames[2], self.show_levels, 3E8, False, func = lambda x: math.log(x+6))) #3
+        self.levels.append(Level(self.level_frames[3], self.show_levels, 3E8, False, func = lambda x: x**2)) #4
+        self.levels.append(Level(self.level_frames[4], self.show_levels, 3E8, False, func = lambda x: math.sin(x))) #5
+        self.levels.append(Level(self.level_frames[5], self.show_levels, 3E8, False, func = lambda x: abs(x))) #6
+        self.levels.append(Level(self.level_frames[6], self.show_levels, 3E8, False, func = lambda x: abs(x))) #7
+        self.levels.append(Level(self.level_frames[7], self.show_levels, 3E8, False, func = lambda x: abs(x))) #8
+        self.levels.append(Level(self.level_frames[8], self.show_levels, 3E8, False, func = lambda x: abs(x))) #9
+        self.levels.append(Level(self.level_frames[9], self.show_levels, 3E8, False, func = lambda x: abs(x))) #10
+
     def create_tutorial_screen(self):
-        self.tutorial = Level(self.tutorial_frame, self.show_main_menu, lambda x: x)
+        self.tutorial = Level(self.tutorial_frame, self.show_main_menu, 3E8, False, func = lambda x: x)
 
     def hide_all_frames(self):
         self.main_frame.place_forget()
         self.credits_frame.place_forget()
         self.levels_frame.place_forget()
         self.tutorial_frame.place_forget()
+        for x in range(10):
+            self.level_frames[x].place_forget()
 
     def create_main_menu(self):
         self.button_font = font.Font(family="Arial", size=18, weight="bold")
@@ -385,6 +409,10 @@ class GameLauncher:
         self.tutorial_frame.place_forget()
         self.hide_all_frames()
         self.main_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+    def start_level(self, num):
+        self.hide_all_frames()
+        self.level_frames[num-1].place(relx=0.5, rely=0.5, anchor="center")
 
     def show_levels(self):
         self.main_frame.place_forget()
